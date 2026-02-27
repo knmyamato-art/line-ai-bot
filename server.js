@@ -1,9 +1,8 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const line = require('@line/bot-sdk');
+
 const app = express();
 
-// Environment Variables
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.LINE_CHANNEL_SECRET,
@@ -11,26 +10,27 @@ const config = {
 
 const client = new line.Client(config);
 
-app.use(bodyParser.json());
+app.post('/webhook', line.middleware(config), async (req, res) => {
+  try {
+    const events = req.body.events || [];
 
-// Webhook endpoint
-app.post('/webhook', line.middleware(config), (req, res) => {
-  Promise.all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
-    .catch((err) => {
-      console.error(err);
-      res.status(500).end();
-    });
+    await Promise.all(events.map(handleEvent));
+
+    res.status(200).end(); // ← 必ず200を返す
+  } catch (err) {
+    console.error(err);
+    res.status(200).end(); // ← エラーでも200返す（検証用）
+  }
 });
 
-function handleEvent(event) {
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null);
+async function handleEvent(event) {
+  if (!event || event.type !== 'message' || event.message.type !== 'text') {
+    return;
   }
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: 'テスト成功しました！',
+    text: 'Webhook接続成功です！',
   });
 }
 
