@@ -4,13 +4,9 @@ const line = require('@line/bot-sdk');
 const app = express();
 
 // Environment Variables
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET;
-
-// Line bot config
 const config = {
-  channelAccessToken: LINE_CHANNEL_ACCESS_TOKEN,
-  channelSecret: LINE_CHANNEL_SECRET,
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.LINE_CHANNEL_SECRET,
 };
 
 const client = new line.Client(config);
@@ -28,10 +24,17 @@ app.post('/webhook', line.middleware(config), (req, res) => {
 });
 
 function handleEvent(event) {
-  // Process event here
+  if (event.type !== 'message' || event.message.type !== 'text') {
+    return Promise.resolve(null);
+  }
+
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: 'テスト成功しました！',
+  });
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
