@@ -13,7 +13,7 @@ const config = {
 const client = new line.Client(config);
 
 // ===== ★ここにあなたのGAS URLを貼る =====
-const GAS_URL = "ここに取得したAppsScriptのURLを貼る";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzWzGGLnVfYbwZqDGdGzOkZqGxwkgVZg4Y0TqSavdoB_49cRxDNm7At7AHZNbNebXzfhw/exec";
 
 // ===== ユーザー状態保存（簡易メモリ）=====
 const userStates = {};
