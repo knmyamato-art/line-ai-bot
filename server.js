@@ -1,5 +1,32 @@
+const express = require('express');
+const line = require('@line/bot-sdk');
+
+const app = express();
+
+// 環境変数
+const config = {
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.LINE_CHANNEL_SECRET,
+};
+
+const client = new line.Client(config);
+
+// ユーザー状態保存
 const userStates = {};
 
+// Webhook
+app.post('/webhook', line.middleware(config), async (req, res) => {
+  try {
+    const events = req.body.events || [];
+    await Promise.all(events.map(handleEvent));
+    res.status(200).end();
+  } catch (err) {
+    console.error("Webhook Error:", err);
+    res.status(200).end();
+  }
+});
+
+// イベント処理
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') {
     return Promise.resolve(null);
@@ -19,7 +46,6 @@ async function handleEvent(event) {
 
   const state = userStates[userId];
 
-  // STEP1: 種類選択
   if (state.step === 1) {
     const types = {
       "1": "売却",
@@ -44,7 +70,6 @@ async function handleEvent(event) {
     });
   }
 
-  // STEP2: エリア
   if (state.step === 2) {
     state.area = userMessage;
     state.step = 3;
@@ -55,12 +80,10 @@ async function handleEvent(event) {
     });
   }
 
-  // STEP3: 物件種別
   if (state.step === 3) {
     state.propertyType = userMessage;
     state.step = 4;
 
-    // 分岐質問
     if (state.category === "売却") {
       return client.replyMessage(event.replyToken, {
         type: 'text',
@@ -90,7 +113,6 @@ async function handleEvent(event) {
     }
   }
 
-  // STEP4: 最終回答
   if (state.step === 4) {
     state.detail = userMessage;
 
@@ -104,3 +126,9 @@ async function handleEvent(event) {
     });
   }
 }
+
+// Render用ポート
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
